@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Login Page</title>
+    <meta charset="utf-8">
+</head>
+<body>
+    <h1>로그인 페이지입니다!</h1>
+    <form action="main" method="POST"></form>
+        <p>
+            <input type="text" id="email" placeholder="이메일">
+        </p>
+        <p>
+            <input type="password" id="password" placeholder="비밀번호">
+        </p>
+        <input type="submit" onclick="login" id="login" value="로그인">
+        <input type="button" onclick="back()" id="back" value="뒤로">
+    </form>
+</body>
+
+<!--jQuery 3.5.1-->
+<script src="https://code.jquery.com/jquery-3.5.1.js" integrity="sha256-QWo7LDvxbWT2tbbQ97B53yJnYU3WhH/C8ycbRAkjPDc=" crossorigin="anonymous"></script>
+
+<!--Javascript-->
+<script>
+    // 로그인 클릭시 발생하는 이벤트
+    $("#login").click(function() {
+        // ajax를 이용한 데이터 전송
+        $.ajax({
+            type : 'POST',
+            url : '../express.js',
+            data : {
+                email : '입력받은 이메일',
+                password : '입력받은 비번'
+            },
+            dataType : JSON,
+            success:function(data) {
+                alert('테스트')
+            },
+            error:function() {
+                alert('실패')
+            }
+        })
+    })
+    $("#back").click(function() {
+
+    })
+</script>
+</html>
