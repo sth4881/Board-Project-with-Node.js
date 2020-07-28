@@ -1,6 +1,7 @@
 const express = require('express')
 const app = express()
 const mysql = require('mysql')
+const request = require('request')
 var db = mysql.createConnection({
     host     : 'localhost',
     user     : 'root',
@@ -11,6 +12,9 @@ db.connect();
 
 app.set('views', __dirname + '/views');
 app.set('view engine', 'ejs');
+
+app.use(express.json())
+app.use(express.urlencoded({ extended : true }))
 
 app.get('/', function(req, res) {
     res.render('index')
@@ -23,11 +27,14 @@ app.get('/login', function(req, res) {
     res.render('login')
 })
 app.post('/login', function(req, res) {
+    // 가져온 데이터랑 mysql 데이터랑 비교해서
+    // 일치하면 로그인해서 main.ejs로 보내기
     db.query('SELECT email, password FROM user', function (error, results) {
         if (error) throw error;
-        // 가져온 데이터랑 mysql 데이터랑 비교해서
-        // 일치하면 로그인해서 main.ejs로 보내기
-        console.log(req.body)
+        for(var i=0; i<results.length; i++) {
+            if (req.body.email == results[i].email && req.body.password == results[i].password)
+                res.send('1')
+        }
     })
 })
 
@@ -47,20 +54,20 @@ app.post('/post'), function(req, res) {
     
 }
 
-// 글수정 구현(해당 글에서 가능, 제목과 내용만)
-app.get('/update', function(req, res) {
-    res.render('update')
-})
-app.post('/update', function(req, res) {
-
-})
-
 // 글목록 구현(main에서 가능)
 app.get('/board', function(req, res) {
     res.render('board')
 })
 app.post('/board', function(req, res) {
     
+})
+
+// 글수정 구현(해당 글에서 가능, 제목과 내용만)
+app.get('/update', function(req, res) {
+    res.render('update')
+})
+app.post('/update', function(req, res) {
+
 })
 
 app.listen(3000, console.log('Example app listening at http://localhost:3000'))
