@@ -25,7 +25,19 @@ app.use(session({
  
 // 로그인 or 회원가입 선택
 app.get('/', function(req, res) {
-    res.render('index')
+    if(!req.session.user) {
+        console.log('세션이 존재하지 않습니다.')
+        res.render('index')
+    }
+    else res.redirect('main')
+})
+
+// 로그아웃 기능 구현
+app.get('/logout', function(req, res) {
+    req.session.destroy(function(error){
+        console.log('세션을 종료합니다.')
+        res.redirect('/')
+    })
 })
 
 // 로그인 기능 구현
@@ -34,9 +46,9 @@ app.get('/', function(req, res) {
 app.get('/login', function(req, res) {
     if(!req.session.user) {
         console.log('세션이 존재하지 않습니다.')
+        res.render('login')
     }
-    else console.log(req.session.user)
-    res.render('login')
+    else res.redirect('main')
 })
 app.post('/login', function(req, res) {
     var sess = req.session // 세션 초기화
@@ -60,13 +72,6 @@ app.post('/login', function(req, res) {
             res.send('1')
         }
         else res.send('2')
-    })
-})
-
-app.get('/logout', function(req, res) {
-    req.session.destroy(function(error){
-        console.log('세션을 종료합니다.')
-        res.redirect('/')
     })
 })
 
