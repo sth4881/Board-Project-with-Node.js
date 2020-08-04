@@ -23,6 +23,35 @@
 
 <!--Javascript-->
 <script>
-
+    // 회원가입 클릭시 발생하는 이벤트 처리
+    $("#signup").on("click", function() {
+        var userEmail = $("#email").val()
+        var userPassword = $("#password").val()
+        var userName = $("#name").val()
+        var userJob = $("#job").val()
+        $.ajax({
+            url : 'signup',
+            type : 'POST',
+            data : {
+                email : userEmail,
+                password : userPassword,
+                name : userName,
+                job : userJob
+            },
+            success:function(result) {
+                if(result=='1') {
+                    alert('회원가입 완료')
+                    window.location.href = "/"
+                }
+                else if(result=='2')
+                    alert('회원가입 양식 오류')
+                else if(result=='3')
+                    alert('이미 회원가입된 이메일입니다')
+            },
+            error:function(result) {
+                alert('통신 오류')
+            }
+        })
+    })
 </script>
 </html>
