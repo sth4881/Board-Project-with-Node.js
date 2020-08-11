@@ -22,6 +22,16 @@ app.use(session({
     resave: false,
     saveUninitialized: true
 }))
+
+// 글 목록 구현 함수
+function list(results) {
+    var result = '<ol>'
+    for(var i=0; i<results.length; i++) {
+        result += `<li>${results[i].title} / ${results[i].name} / ${results[i].datetime}</li>`
+    }
+    result += '</ol>'
+    return result;
+}
  
 // 로그인 or 회원가입 선택
 app.get('/', function(req, res) {
@@ -95,20 +105,23 @@ app.post('/signup', function(req, res) {
             res.send('3')
         // 회원가입 완료
         else {
-            db.query(sql2, [req.body.email, req.body.password, req.body.name, req.body.job], function(error, results) {
-                if(error) throw error
-                else res.send('1')
-            })
+            db.query(sql2, [req.body.email, req.body.password, req.body.name, req.body.job], 
+                function(error, results) {
+                    if(error) throw error
+                    else res.send('1')
+                }
+            )
         }
     })
 })
 
 // 글 목록 구현(main에서 가능)
 app.get('/main', function(req, res) {
-    res.render('main')
-})
-app.post('/main', function(req, res) {
-    
+    var sql = `SELECT title, name, DATE_FORMAT(modified, '%Y-%m-%d %H:%i:%s')
+                AS datetime FROM article a JOIN user u on a.author_id=u.id`
+    db.query(sql, function(error, results) {
+        res.render('main', {test : list(results)})
+    })
 })
 
 // 글 쓰기 구현(main에서 가능)

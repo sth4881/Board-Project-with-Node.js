@@ -6,12 +6,11 @@
 </head>
 <body>
     <h1>메인 페이지입니다!</h1>
-    <p>전체 글 목록</p>
-    <ol>
-
-    </ol>
-    <input type="button"  id="post" name="post" value="글 쓰기" onClick="window.location.href='/post'">
-    <input type="button"  id="look" name="look" value="내 글 보기">
+    <div>
+    <%- test %>
+    </div>
+    <input type="button" id="post" name="post" value="글 쓰기" onClick="window.location.href='/post'">
+    <input type="button" id="look" name="look" value="내 글 보기">
     <input type="button" id="logoutBtn" name="logoutBtn" value="로그아웃" onClick="window.location.href='/logout'">
 </body>
 
