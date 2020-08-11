@@ -25,13 +25,14 @@ app.use(session({
 
 // 글 목록 구현 함수
 function list(results) {
-    var result = '<ol>'
-    for(var i=0; i<results.length; i++) {
-        result += `<li><a href="">${results[i].title}</a>
-        , ${results[i].name} posted on ${results[i].datetime}</li>`
+    var list = '<ol reversed>'
+    for(var i=results.length-1; i>=0; i--) {
+        console.log(results[i])
+        list += `<li><a href="read/${results[i].id}">${results[i].title}</a>,
+         ${results[i].name} posted on ${results[i].datetime}</li>`
     }
-    result += '</ol>'
-    return result;
+    list += '</ol>'
+    return list;
 }
  
 // 로그인 or 회원가입 선택
@@ -121,16 +122,26 @@ app.post('/signup', function(req, res) {
 
 // 글 목록 구현(main에서 가능)
 app.get('/main', function(req, res) {
-    var sql = `SELECT title, name, DATE_FORMAT(modified, '%Y-%m-%d %H:%i:%s')
+    // var temp = req.session.user.name
+    var sql = `SELECT a.id, title, name, DATE_FORMAT(modified, '%Y-%m-%d %H:%i:%s')
                 AS datetime FROM article a JOIN user u on a.author_id=u.id`
     db.query(sql, function(error, results) {
-        res.render('main', {name : req.session.user.name, list : list(results)})
+        res.render('main', {name : 'temp', list : list(results)})
+    })
+})
+
+// 글 내용 조회 구현(main에서 가능)
+app.get('/read/:id', function(req, res) {
+    var sql = 'SELECT * FROM article WHERE id=?'
+    db.query(sql, [req.params.id], function(error, results) {
+        // :id가 있는 페이지는 앞의 view를 이용해서 구현(DB의 id값을 불러와서 연결하는 방식)
+        res.render('read', {title : results[0].title, contents : results[0].contents})
     })
 })
 
 // 글 쓰기 구현(main에서 가능)
 app.get('/post', function(req, res) {
-    res.render('post')
+    //res.render('post')
 })
 app.post('/post'), function(req, res) {
     
