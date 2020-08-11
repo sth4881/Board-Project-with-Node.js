@@ -27,7 +27,8 @@ app.use(session({
 function list(results) {
     var result = '<ol>'
     for(var i=0; i<results.length; i++) {
-        result += `<li>${results[i].title} / ${results[i].name} / ${results[i].datetime}</li>`
+        result += `<li><a href="">${results[i].title}</a>
+        , ${results[i].name} posted on ${results[i].datetime}</li>`
     }
     result += '</ol>'
     return result;
@@ -55,7 +56,7 @@ app.get('/logout', function(req, res) {
 // DB에 저장된 'password' 값이 일치하면 성공
 app.get('/login', function(req, res) {
     if(!req.session.user) {
-        //console.log('세션이 존재하지 않습니다.')
+        console.log('세션이 존재하지 않습니다.')
         res.render('login')
     }
     else res.redirect('main')
@@ -63,13 +64,16 @@ app.get('/login', function(req, res) {
 app.post('/login', function(req, res) {
     // 입력 데이터랑 mysql 데이터랑 비교해서
     // 일치하면 로그인해서 main.ejs로 보내기
-    var sql = 'SELECT * FROM user WHERE email=?'
+    var sql = "SELECT * FROM user WHERE email=?"
+    // 이메일 or 비밀번호 칸이 하나라도 비어있을 경우
     if (req.body.email=='' || req.body.password=='')
         res.send('2')
     else {
-        db.query(sql, [req.body.email], function(error, results) {
+        db.query(sql, [req.body.email, req.body.password], function(error, results) {
             if (error) throw error;
-            else if (req.body.password==results[0].password) {
+            else if(results[0]==undefined) // 회원정보가 존재하지 않을 경우
+                res.send('3')
+            else if (results[0].password==req.body.password) {
                 // 세션이 없을 경우 생성
                 if(!req.session.user) {
                     req.session.user = {
@@ -81,7 +85,7 @@ app.post('/login', function(req, res) {
                 console.log(req.session)
                 res.send('1')
             }
-            else res.send('2')
+            else res.send('2') // 이메일은 일치하지만 비밀번호가 다른 경우
         })
     }
 })
@@ -120,7 +124,7 @@ app.get('/main', function(req, res) {
     var sql = `SELECT title, name, DATE_FORMAT(modified, '%Y-%m-%d %H:%i:%s')
                 AS datetime FROM article a JOIN user u on a.author_id=u.id`
     db.query(sql, function(error, results) {
-        res.render('main', {test : list(results)})
+        res.render('main', {name : req.session.user.name, list : list(results)})
     })
 })
 

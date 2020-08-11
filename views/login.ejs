@@ -35,7 +35,9 @@
                     window.location.href = "main"
                 }
                 else if(result=='2')
-                    alert('아이디/비번 오류')
+                    alert('이메일/비밀번호가 다릅니다.')
+                else if(result=='3')
+                    alert('회원정보가 존재하지 않습니다.')
             },
             error:function(result) {
                 alert('통신 오류')
