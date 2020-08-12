@@ -7,15 +7,21 @@
 <body>
     <h1>환영합니다 <%= name %>님!</h1>
     <%- list %>
-    <input type="button" id="post" name="post" value="글 쓰기" onClick="window.location.href='/post'">
+    <input type="button" id="post" name="post" value="글 쓰기" onClick="window.location.href='post'">
     <input type="button" id="look" name="look" value="내 정보">
-    <input type="button" id="logoutBtn" name="logoutBtn" value="로그아웃" onClick="window.location.href='/logout'">
+    <input type="button" id="logoutBtn" name="logoutBtn" value="로그아웃">
 </body>
 
 <!--jQuery 3.5.1-->
 <script src="https://code.jquery.com/jquery-3.5.1.js" integrity="sha256-QWo7LDvxbWT2tbbQ97B53yJnYU3WhH/C8ycbRAkjPDc=" crossorigin="anonymous"></script>
 
-<!--Javascript-->
+<!--JavaScript-->
 <script>
-
+    // 로그아웃 버튼 누르면 로그아웃 알림 띄우고
+    // GET method를 이용해서 서버한테 logout.ejs를 요청
+    // a href, window.location.href는 전부 GET방식으로 동작
+    $("#logoutBtn").on("click", function() {
+        alert('로그아웃 되었습니다')
+        window.location.href = 'logout'
+    })
 </script>

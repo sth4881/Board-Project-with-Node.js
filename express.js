@@ -27,7 +27,7 @@ app.use(session({
 function list(results) {
     var list = '<ol reversed>'
     for(var i=results.length-1; i>=0; i--) {
-        console.log(results[i])
+        //console.log(results[i])
         list += `<li><a href="read/${results[i].id}">${results[i].title}</a>,
          ${results[i].name} posted on ${results[i].datetime}</li>`
     }
@@ -42,6 +42,38 @@ app.get('/', function(req, res) {
         res.render('index')
     }
     else res.redirect('main')
+})
+
+// 회원가입 기능 구현
+// JOB을 제외한 항목이 하나라도 비어있으면 가입 불가
+// 회원가입하려는 이메일이 이미 존재할 경우 가입 불가
+app.get('/signup', function(req, res) {
+    res.render('signup')
+})
+app.post('/signup', function(req, res) {
+    var sql1 = 'SELECT * from user WHERE email=?'
+    var sql2 = 'INSERT INTO user(email, password, name, job) VALUES(?, ?, ?, ?)'
+    
+    // 이메일, 비밀번호, 이름 중에서 하나의 항목이라도 비어있으면 오류 발생
+    if(req.body.email=='' || req.body.password=='' || req.body.name=='')
+        res.send('2')
+    else {
+        db.query(sql1, [req.body.email], function(error, info) {
+            // 해당 이메일이 회원으로 등록되어있지 않을 경우 실행
+            if(info[0]==undefined) {
+                db.query(sql2, [req.body.email, req.body.password, req.body.name, req.body.job], 
+                    function(error, result) {
+                        if(error) throw error
+                        else res.send('1')
+                    }
+                )
+            } 
+            // 해당 이메일이 이미 회원으로 등록되어 있을 경우
+            else if(req.body.email==info[0].email) {
+                res.send('3')
+            }
+        })
+    }
 })
 
 // 로그아웃 기능 구현
@@ -91,54 +123,28 @@ app.post('/login', function(req, res) {
     }
 })
 
-// 회원가입 기능 구현
-// JOB을 제외한 항목이 하나라도 비어있으면 가입 불가
-// 회원가입하려는 이메일이 이미 존재할 경우 가입 불가
-app.get('/signup', function(req, res) {
-    res.render('signup')
-})
-app.post('/signup', function(req, res) {
-    var sql1 = 'SELECT * from user WHERE email=?'
-    var sql2 = 'INSERT INTO user(email, password, name, job) VALUES(?, ?, ?, ?)'
-    
-    // 이메일, 비밀번호, 이름 중에서 하나의 항목이라도 비어있으면 오류 발생
-    if(req.body.email=='' || req.body.password=='' || req.body.name=='')
-        res.send('2')
-    else {
-        db.query(sql1, [req.body.email], function(error, info) {
-            // 해당 이메일이 회원으로 등록되어있지 않을 경우 실행
-            if(info[0]==undefined) {
-                db.query(sql2, [req.body.email, req.body.password, req.body.name, req.body.job], 
-                    function(error, result) {
-                        if(error) throw error
-                        else res.send('1')
-                    }
-                )
-            }
-            // 해당 이메일이 이미 회원으로 등록되어 있을 경우
-            else if(req.body.email==info[0].email) {
-                res.send('3')
-            }
+// 글 목록 구현(main에서 가능)
+app.get('/main', function(req, res) {
+    // 로그인되어있지 않으면 로그인 요청 알림 띄우고 pass.ejs로 이동
+    // pass.ejs는alert와 redirection을 동시에 가능하게 만들어주는 빈 페이지
+    if(!req.session.user) {
+        res.render('pass')
+    } else {
+        var sql = `SELECT a.id, title, name, DATE_FORMAT(modified, '%Y-%m-%d %H:%i:%s')
+                    AS datetime FROM article a JOIN user u on a.author_id=u.id`
+        db.query(sql, function(error, results) {
+            res.render('main', {name : 'temp', list : list(results)})
         })
     }
 })
 
-// 글 목록 구현(main에서 가능)
-app.get('/main', function(req, res) {
-    // var temp = req.session.user.name
-    var sql = `SELECT a.id, title, name, DATE_FORMAT(modified, '%Y-%m-%d %H:%i:%s')
-                AS datetime FROM article a JOIN user u on a.author_id=u.id`
-    db.query(sql, function(error, results) {
-        res.render('main', {name : 'temp', list : list(results)})
-    })
-})
-
 // 글 내용 조회 구현(main에서 가능)
 app.get('/read/:id', function(req, res) {
-    var sql = 'SELECT * FROM article WHERE id=?'
+    var sql = `SELECT a.id, name, title, contents, DATE_FORMAT(modified, '%Y-%m-%d %H:%i:%s')
+                AS datetime FROM article a JOIN user u WHERE a.author_id=u.id AND a.id=?`
     db.query(sql, [req.params.id], function(error, results) {
         // :id가 있는 페이지는 앞의 view를 이용해서 구현(DB의 id값을 불러와서 연결하는 방식)
-        res.render('read', {title : results[0].title, contents : results[0].contents})
+        res.render('read', {title : results[0].title, contents : results[0].contents, author : results[0].name})
     })
 })
 
