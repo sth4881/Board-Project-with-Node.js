@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<head>
+    <title>Post Page</title>
+    <meta charset="utf-8">
+</head>
+<body>
+    <h1>제목</h1>
+    <p><input type="text" id="title" name="title" placeholder="제목을 써주세요." style="width:500px;height:30px;font-size:20px;"></p>
+    <h1>내용</h1>
+    <p><textarea name="contents" id="contents" placeholder="내용을 써주세요." cols="50" rows="20" style="font-size:20px;"></textarea></p>
+    <input type="submit" id="writeBtn" name="writeBtn" value="글 쓰기">
+    <input type="button" id="back" name="back" value="돌아가기">
+</body>
+
+<!--jQuery 3.5.1-->
+<script src="https://code.jquery.com/jquery-3.5.1.js" integrity="sha256-QWo7LDvxbWT2tbbQ97B53yJnYU3WhH/C8ycbRAkjPDc=" crossorigin="anonymous"></script>
+
+<!--Javascript-->
+<script>
+    var title = $("#title").val()
+    var contents = $("#contents").val()
+    $("#writeBtn").on("click", function() {
+        $.ajax({
+            url : 'write',
+            method : 'POST',
+            data : {
+                writingTitle : title,
+                writingContents : contents
+            },
+            success:function(result) {
+                if(result=='1') {
+                    alert('글이 성공적으로 저장되었습니다')
+                    window.location.href = 'main'
+                }
+            },
+            error:function(result) {
+                alert('통신 오류')
+            }
+        })
+    })
+    $("#back").on("click", function() {
+        window.location.href='main'
+    })
+</script>

@@ -62,7 +62,7 @@ app.post('/signup', function(req, res) {
             // 해당 이메일이 회원으로 등록되어있지 않을 경우 실행
             if(info[0]==undefined) {
                 db.query(sql2, [req.body.email, req.body.password, req.body.name, req.body.job], 
-                    function(error, result) {
+                    function(error) {
                         if(error) throw error
                         else res.send('1')
                     }
@@ -130,6 +130,7 @@ app.get('/main', function(req, res) {
     if(!req.session.user) {
         res.render('pass')
     } else {
+        // 글 목록 표시
         var sql = `SELECT a.id, title, name, DATE_FORMAT(modified, '%Y-%m-%d %H:%i:%s')
                     AS datetime FROM article a JOIN user u on a.author_id=u.id`
         db.query(sql, function(error, results) {
@@ -142,6 +143,7 @@ app.get('/main', function(req, res) {
 app.get('/read/:id', function(req, res) {
     var sql = `SELECT a.id, name, title, contents, DATE_FORMAT(modified, '%Y-%m-%d %H:%i:%s')
                 AS datetime FROM article a JOIN user u WHERE a.author_id=u.id AND a.id=?`
+    // req.params.id는 a.id가 아닌 'read/:id'의 id를 말함
     db.query(sql, [req.params.id], function(error, results) {
         // :id가 있는 페이지는 앞의 view를 이용해서 구현(DB의 id값을 불러와서 연결하는 방식)
         res.render('read', {title : results[0].title, contents : results[0].contents, author : results[0].name})
@@ -149,11 +151,27 @@ app.get('/read/:id', function(req, res) {
 })
 
 // 글 쓰기 구현(main에서 가능)
-app.get('/post', function(req, res) {
-    //res.render('post')
+app.get('/write', function(req, res) {
+    if(!req.session.user) {
+        res.render('pass')
+    } else res.render('write')
 })
-app.post('/post'), function(req, res) {
-    
+app.post('/write'), function(req, res) {
+    var userEmail = req.session.user.email
+    var sql1 = 'SELECT * FROM user WHERE email=?'
+    var sql2 = `INSERT INTO article(title, contents, author_id, 
+        created, modified) VALUES(?, ?, ?, NOW(), NOW())`
+    db.query(sql1, [userEmail], function(error, author) {
+        if(error) throw error
+        else {
+            db.query(sql2, [req.body.writingTitle, req.body.writingContents, author[0].id], 
+                function(error) {
+                    if(error) throw error
+                    res.send('1')
+                }
+            )
+        }
+    })
 }
 
 // 글수정 구현(해당 글에서 가능, 제목과 내용만)
