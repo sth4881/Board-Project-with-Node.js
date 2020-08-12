@@ -100,24 +100,27 @@ app.get('/signup', function(req, res) {
 app.post('/signup', function(req, res) {
     var sql1 = 'SELECT * from user WHERE email=?'
     var sql2 = 'INSERT INTO user(email, password, name, job) VALUES(?, ?, ?, ?)'
-    db.query(sql1, [req.body.email], function(error, results) {
-        if(error) throw error
-        // 이메일, 비밀번호, 이름 중에서 하나의 항목이라도 비어있으면 오류 발생
-        else if(req.body.email=='' || req.body.password=='' || req.body.name=='')
-            res.send('2')
-        // 이메일을 대조하여 이미 가입된 아이디면 오류 발생
-        else if(req.body.email==results[0].email)
-            res.send('3')
-        // 회원가입 완료
-        else {
-            db.query(sql2, [req.body.email, req.body.password, req.body.name, req.body.job], 
-                function(error, results) {
-                    if(error) throw error
-                    else res.send('1')
-                }
-            )
-        }
-    })
+    
+    // 이메일, 비밀번호, 이름 중에서 하나의 항목이라도 비어있으면 오류 발생
+    if(req.body.email=='' || req.body.password=='' || req.body.name=='')
+        res.send('2')
+    else {
+        db.query(sql1, [req.body.email], function(error, info) {
+            // 해당 이메일이 회원으로 등록되어있지 않을 경우 실행
+            if(info[0]==undefined) {
+                db.query(sql2, [req.body.email, req.body.password, req.body.name, req.body.job], 
+                    function(error, result) {
+                        if(error) throw error
+                        else res.send('1')
+                    }
+                )
+            }
+            // 해당 이메일이 이미 회원으로 등록되어 있을 경우
+            else if(req.body.email==info[0].email) {
+                res.send('3')
+            }
+        })
+    }
 })
 
 // 글 목록 구현(main에서 가능)
