@@ -156,15 +156,16 @@ app.get('/write', function(req, res) {
         res.render('pass')
     } else res.render('write')
 })
-app.post('/write'), function(req, res) {
+app.post('/write', function(req, res) {
     var userEmail = req.session.user.email
     var sql1 = 'SELECT * FROM user WHERE email=?'
     var sql2 = `INSERT INTO article(title, contents, author_id, 
         created, modified) VALUES(?, ?, ?, NOW(), NOW())`
+    console.log(req.body)
     db.query(sql1, [userEmail], function(error, author) {
         if(error) throw error
         else {
-            db.query(sql2, [req.body.writingTitle, req.body.writingContents, author[0].id], 
+            db.query(sql2, [req.body.title, req.body.contents, author[0].id], 
                 function(error) {
                     if(error) throw error
                     res.send('1')
@@ -172,7 +173,7 @@ app.post('/write'), function(req, res) {
             )
         }
     })
-}
+})
 
 // 글수정 구현(해당 글에서 가능, 제목과 내용만)
 app.get('/update', function(req, res) {
