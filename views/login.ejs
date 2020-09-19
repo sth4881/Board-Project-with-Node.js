@@ -39,8 +39,23 @@
                 else if(result=='3')
                     alert('회원정보가 존재하지 않습니다.')
             },
-            error:function(result) {
-                alert('통신 오류')
+            error:function(jqXHR, exception) {
+                var msg = '';
+                if (jqXHR.status === 0) {
+                    msg = 'Not connected. Please Verify Network.';
+                } else if (jqXHR.status == 404) {
+                    msg = '[404] Requested page not found.';
+                } else if (jqXHR.status == 500) {
+                    msg = '[500] Internal Server Error.';
+                } else if (exception === 'parsererror') {
+                    msg = 'Requested JSON parse failed.';
+                } else if (exception === 'timeout') {
+                    msg = 'Time out error.';
+                } else if (exception === 'abort') {
+                    msg = 'Ajax request aborted.';
+                } else {
+                    msg = 'Uncaught Error.\n' + jqXHR.responseText;
+                } alert(msg)
             }
         })
     })

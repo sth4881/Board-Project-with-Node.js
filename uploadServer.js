@@ -1,12 +1,12 @@
 const express = require('express')
 const app = express()
 const mysql = require('mysql')
-const session = require('express-session')
+const session = require('express-session');
 var db = mysql.createConnection({
     host     : 'localhost',
-    user     : '******',
-    password : '******',
-    database : '******'
+    user     : '****',
+    password : '****',
+    database : '****'
 });
 db.connect();
 
@@ -24,16 +24,11 @@ app.use(session({
 }))
 
 // 글 목록 구현 함수
-function list(email, results) {
+function list(results) {
     var list = '<ol reversed>'
     for(var i=results.length-1; i>=0; i--) {
-        if(email==results[i].email) { // 로그인 한 사용자의 이메일과 작성자의 이메일이 같을 경우
-            list += `<li><a href="authorized/${results[i].id}">${results[i].title}</a>,
-            ${results[i].name} posted on ${results[i].datetime}</li>`
-        } else { // 로그인 한 사용자의 이메일과 작성자의 이메일이 다를 경우
-            list += `<li><a href="read/${results[i].id}">${results[i].title}</a>,
-            ${results[i].name} posted on ${results[i].datetime}</li>`
-        }
+        list += `<li><a href="read/${results[i].id}">${results[i].title}</a>,
+        ${results[i].name} posted on ${results[i].datetime}</li>`
     }
     list += '</ol>'
     return list;
@@ -82,7 +77,7 @@ app.post('/signup', function(req, res) {
 
 // 로그아웃 기능 구현
 app.get('/logout', function(req, res) {
-    req.session.destroy(function(error){
+    req.session.destroy(function(error) {
         console.log('세션을 종료합니다.')
         res.redirect('/')
     })
@@ -107,7 +102,7 @@ app.post('/login', function(req, res) {
         res.send('2')
     else {
         db.query(sql, [req.body.email, req.body.password], function(error, results) {
-            if (error) throw error;
+            if (error) throw error
             else if(results[0]==undefined) // 회원정보가 존재하지 않을 경우
                 res.send('3')
             else if (results[0].password==req.body.password) {
@@ -129,49 +124,65 @@ app.post('/login', function(req, res) {
 
 // 글 목록 구현(main에서 가능)
 app.get('/main', function(req, res) {
-    // 로그인되어있지 않으면 로그인 요청 알림 띄우고 empty.ejs로 이동
-    // (!)empty.ejs는 alert와 redirection이 동시에 발생하는 빈 페이지
+    // 로그인되어있지 않으면 로그인 요청 알림 띄우고 loginFirst.ejs로 이동
+    // (!)loginFirst.ejs는 alert와 redirection이 동시에 발생하는 빈 페이지
     if(!req.session.user) {
-        res.render('empty')
+        res.render('loginFirst')
     } else {
         // 글 목록 표시
-        var sql = `SELECT a.id, title, email, name, DATE_FORMAT(modified, '%Y-%m-%d %H:%i:%s')
+        var sql = `SELECT a.id, title, name, DATE_FORMAT(modified, '%Y-%m-%d %H:%i:%s')
                     AS datetime FROM article a JOIN user u on a.author_id=u.id`
         db.query(sql, function(error, results) {
-            // req.user.email 인수를 같이 보내줌으로써 메인 화면에 글 목록을 띄울 때 로그인 한 사용자가 
-            // 내가 쓴 글인지 아닌지에 따라서 authorized 또는 read 페이지로 이동하는 글 목록을 띄워줄거임
-            res.render('main', {name : 'temp', list : list(req.session.user.email, results)})
+            if (error) throw error
+            res.render('main', {name : 'temp', list : list(results)})
         })
     }
 })
 
-// 글 내용 조회 구현(내가 작성한 글이 아니므로 수정&삭제 버튼 없음)
+// 글 내용 조회 기능 구현(해당 페이지에서 글 수정 & 삭제 표시)
 app.get('/read/:id', function(req, res) {
-    var sql = `SELECT a.id, name, title, contents, DATE_FORMAT(modified, '%Y-%m-%d %H:%i:%s')
-                AS datetime FROM article a JOIN user u WHERE a.author_id=u.id AND a.id=?`
-    // req.params.id는 a.id가 아닌 'read/:id'의 id를 말함
-    db.query(sql, [req.params.id], function(error, results) {
-        // :id가 있는 페이지는 앞의 view를 이용해서 구현(DB의 id값을 불러와서 연결하는 방식)
-        res.render('read', {title : results[0].title, contents : results[0].contents, author : results[0].name})
-    })
+    if(!req.session.user) {
+        res.render('loginFirst')
+    } else {
+        // 해당 페이지에 표시할 글의 정보를 알기 위한 sql
+        var sql = `SELECT a.id, email, name, title, contents, DATE_FORMAT(modified, '%Y-%m-%d %H:%i:%s')
+                    AS datetime FROM article a JOIN user u WHERE a.author_id=u.id AND a.id=?`
+        // req.params.id는 a.id가 아닌 'read/:id'의 id를 말함
+        db.query(sql, [req.params.id], function(error, results) {
+            if (error) throw error
+            // :id가 있는 페이지는 앞의 view를 이용해서 구현(DB의 id값을 불러와서 연결하는 방식)
+            // 현재 접속중인 사용자의 이메일과 저자의 이메일이 일치할 경우 수정 & 삭제 버튼 표시
+            if(req.session.user.email==results[0].email) {
+                res.render('read', {title : results[0].title, contents : results[0].contents, author : results[0].name, 
+                    authorized : `
+                        <input type="button" id="modify" name="modify" value="글 수정">
+                        <input type="button" id="delete" name="delete" value="글 삭제">
+                    `
+                })
+            } else {
+                res.render('read', {title : results[0].title, contents : results[0].contents, author : results[0].name, authorized : ''})
+            }
+        })
+    }
+})
+// 글 삭제 기능 구현(중)
+app.post('/read/:id', function(req, res) {
+    if(req.body.confirm=='true') {
+        console.log(req.params)
+        /*
+        var sql = 'DELETE FROM article WHERE id=?'
+        db.query(sql, [req.params.id], function(error, result) {
+            if(error) throw error;
+            res.send('삭제')
+        })
+        */
+    }
 })
 
-// 글 내용 조회 구현(내가 작성한 글이므로 수정&삭제 버튼 있음)
-app.get('/authorized/:id', function(req, res) {
-    var sql = `SELECT a.id, name, title, contents, DATE_FORMAT(modified, '%Y-%m-%d %H:%i:%s')
-                AS datetime FROM article a JOIN user u WHERE a.author_id=u.id AND a.id=?`
-    // req.params.id는 a.id가 아닌 'authorized/:id'의 id를 말함
-    db.query(sql, [req.params.id], function(error, results) {
-        // :id가 있는 페이지는 앞의 view를 이용해서 구현(DB의 id값을 불러와서 연결하는 방식)
-        res.render('authorized', {title : results[0].title, contents : results[0].contents, author : results[0].name})
-    })
-})
-
-
-// 글 쓰기 구현(main에서 가능)
+// 글 쓰기 기능 구현(main에서 가능)
 app.get('/write', function(req, res) {
     if(!req.session.user) {
-        res.render('empty')
+        res.render('loginFirst')
     } else res.render('write')
 })
 app.post('/write', function(req, res) {
@@ -193,11 +204,11 @@ app.post('/write', function(req, res) {
     })
 })
 
-// 글수정 구현(해당 글에서 가능, 제목과 내용만)
-app.get('/update', function(req, res) {
-    res.render('update')
+// 글 수정 기능 구현(해당 글에서 가능, 제목과 내용만)
+app.get('/modify', function(req, res) {
+    res.render('modify')
 })
-app.post('/update', function(req, res) {
+app.post('/modify', function(req, res) {
 
 })
 

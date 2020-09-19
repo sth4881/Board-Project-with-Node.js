@@ -38,7 +38,7 @@
             error:function(jqXHR, exception) {
                 var msg = '';
                 if (jqXHR.status === 0) {
-                    msg = 'Not connected.\n Verify Network.';
+                    msg = 'Not connected. Please Verify Network.';
                 } else if (jqXHR.status == 404) {
                     msg = '[404] Requested page not found.';
                 } else if (jqXHR.status == 500) {
